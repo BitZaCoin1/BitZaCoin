@@ -40,7 +40,7 @@ class Transaction {
     // You can only send a transaction from the wallet that is linked to your
     // key. So here we check if the fromAddress matches your publicKey
     if (signingKey.getPublic('hex') !== this.fromAddress) {
-      throw new Error('You cannot sign transactions for other wallets!');
+      throw('You cannot sign transactions for other wallets!');
     }
 
     // Calculate the hash of this transaction, sign it with the key
@@ -61,10 +61,10 @@ class Transaction {
     // If the transaction doesn't have a from address we assume it's a
     // mining reward and that it's valid. You could verify this in a
     // different way (special field for instance)
-    if (this.fromAddress === null) return true;
+    if (this.fromAddress === "BITZACOIN") return true;
 
     if (!this.signature || this.signature.length === 0) {
-      throw new Error('No signature in this transaction');
+      throw('No signature in this transaction');
     }
 
     const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
@@ -118,7 +118,7 @@ class Block {
       this.hash = this.calculateHash();
     }
 
-    debug(`Block mined: ${this.hash}`);
+   console.log(`Block mined: ${this.hash}`);
   }
 
   /**
@@ -143,7 +143,7 @@ class Blockchain {
     this.chain = [this.createGenesisBlock()];
     this.difficulty = 2;
     this.pendingTransactions = [];
-    this.miningReward = 100;
+    this.miningReward =1*5/10;
   }
 
   /**
@@ -185,10 +185,11 @@ class Blockchain {
     );
     block.mineBlock(this.difficulty);
 
-    debug('Block successfully mined!');
+   
     this.chain.push(block);
 
     this.pendingTransactions = [];
+    console.log('Block successfully mined!');
   }
 
   /**
@@ -200,22 +201,22 @@ class Blockchain {
    */
   addTransaction(transaction) {
     if (!transaction.fromAddress || !transaction.toAddress) {
-      throw new Error('Transaction must include from and to address');
+      throw('Transaction must include from and to address');
     }
 
     // Verify the transactiion
     if (!transaction.isValid()) {
-      throw new Error('Cannot add invalid transaction to chain');
+      throw('Cannot add invalid transaction to chain');
     }
 
     if (transaction.amount <= 0) {
-      throw new Error('Transaction amount should be higher than 0');
+      throw('Transaction amount should be higher than 0');
     }
 
     // Making sure that the amount sent is not greater than existing balance
     const walletBalance = this.getBalanceOfAddress(transaction.fromAddress);
     if (walletBalance < transaction.amount) {
-      throw new Error('Not enough balance');
+      throw('Not enough balance');
     }
 
     // Get all other pending transactions for the "from" wallet
@@ -233,14 +234,14 @@ class Blockchain {
 
       const totalAmount = totalPendingAmount + transaction.amount;
       if (totalAmount > walletBalance) {
-        throw new Error(
+        throw (
           'Pending transactions for this wallet is higher than its balance.'
         );
       }
     }
 
     this.pendingTransactions.push(transaction);
-    debug('transaction added: %s', transaction);
+  JSON.stringify( console.log('transaction added: %s', transaction));
   }
 
   /**
@@ -250,22 +251,27 @@ class Blockchain {
    * @returns {number} The balance of the wallet
    */
   getBalanceOfAddress(address) {
-    let balance = 0;
+  	
+    
+   let amount=0;
 
     for (const block of this.chain) {
-      for (const trans of block.transactions) {
-        if (trans.fromAddress === address) {
-          balance -= trans.amount;
+      for (const transaction of block.transactions) {
+        if (transaction.fromAddress === address) {
+        amount-=transaction.amount;
+        
         }
 
-        if (trans.toAddress === address) {
-          balance += trans.amount;
+        if (transaction.toAddress === address) {
+        amount+=+transaction.amount;
+     
         }
+ 
       }
     }
 
-    debug('getBalanceOfAdrees: %s', balance);
-    return balance;
+   console.log('getBalanceOfAddress: %s', amount);
+    return amount.toFixed(8);
   }
 
   /**
@@ -286,7 +292,7 @@ class Blockchain {
       }
     }
 
-    debug('get transactions for wallet count: %s', txs.length);
+   console.log ('get transactions for wallet count: %s', txs.length);
     return txs;
   }
 
